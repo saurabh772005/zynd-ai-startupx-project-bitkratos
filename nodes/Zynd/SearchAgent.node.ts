@@ -20,6 +20,12 @@ export class SearchAgent implements INodeType {
 		inputs: [NodeConnectionTypes.Main],
 		outputs: [NodeConnectionTypes.Main],
 		usableAsTool: true,
+		credentials: [
+			{
+				name: 'zyndAiApi',
+				required: false
+			},
+		],
 		properties: [
 			{
 				displayName: 'Agent Keyword',
@@ -75,7 +81,10 @@ export class SearchAgent implements INodeType {
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const items = this.getInputData();
 		const returnData: INodeExecutionData[] = [];
-
+		
+		const credentials = await this.getCredentials('zyndAiApi');
+		const apiUrl = credentials.apiUrl as string;
+		
 		// Process each input item
 		for (let i = 0; i < items.length; i++) {
 			try {
@@ -112,18 +121,18 @@ export class SearchAgent implements INodeType {
 					qs.keyword = keyword;
 				}
 
-				
+
 				// Execute GET request
 				const response = await this.helpers.httpRequest({
 					method: 'GET',
-					url: 'https://registry.shilltube.fun/search/agents',
+					url: `${apiUrl}/search/agents`,
 					qs,
 					json: true,
 					timeout: 10000,
 					returnFullResponse: false,
 				});
 				this.logger.error(`Searching agents with query: ${JSON.stringify(response)}`);
-				
+
 				// Extract only the data we need (avoid circular references)
 				const agentsList = Array.isArray(response?.data) ? response.data : [];
 
@@ -180,15 +189,15 @@ export class SearchAgent implements INodeType {
 						capabilities: Array.isArray(agent.capabilities) ? agent.capabilities : [],
 						connectionString: agent.connectionString || '',
 						mqttUri: agent.mqttUri || '',
-						
+
 						// Metadata
 						status: agent.status || 'UNKNOWN',
 						createdAt: agent.createdAt,
 						updatedAt: agent.updatedAt,
-						
+
 						// Helper fields for workflow logic
-						capabilitiesString: Array.isArray(agent.capabilities) 
-							? agent.capabilities.join(', ') 
+						capabilitiesString: Array.isArray(agent.capabilities)
+							? agent.capabilities.join(', ')
 							: '',
 					};
 

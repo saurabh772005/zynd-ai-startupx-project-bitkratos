@@ -1,5 +1,5 @@
 {
-	"node": "n8n-nodes-search-agent",
+	"node": "n8n-nodes-agent-publisher",
 	"nodeVersion": "1.0",
 	"codexVersion": "1.0",
 	"categories": ["Development", "Developer Tools"],
