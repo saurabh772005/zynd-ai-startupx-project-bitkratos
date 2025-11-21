@@ -10,7 +10,7 @@ export class AgentPublisher implements INodeType {
     description: INodeTypeDescription = {
         displayName: 'Zynd Agent Publisher',
         name: 'zyndAgentPublisher',
-        icon: { light: 'file:zynd.svg', dark: 'file:zynd.dark.svg' },
+		icon: { light: 'file:../../icons/zynd.svg', dark: 'file:../../icons/zynd.svg' },
         group: ['transform'],
         version: 1,
         description: 'Create and publish your n8n to the ZyndAI network',
@@ -30,9 +30,10 @@ export class AgentPublisher implements INodeType {
     };
 
     async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
+
         const items = this.getInputData();
         const returnData: INodeExecutionData[] = [];
-
+        this.logger.debug(`Starting execution of Zynd Agent Publisher node with ${items.length} items.`);
 
         const credentials = await this.getCredentials('zyndAiApi');
         const apiUrl = credentials.apiUrl as string;

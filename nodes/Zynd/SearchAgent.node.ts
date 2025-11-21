@@ -10,7 +10,7 @@ export class SearchAgent implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Zynd Agent Search',
 		name: 'zyndAgentSearch',
-		icon: { light: 'file:zynd.svg', dark: 'file:zynd.dark.svg' },
+		icon: { light: 'file:../../icons/zynd.svg', dark: 'file:../../icons/zynd.svg' },
 		group: ['transform'],
 		version: 1,
 		description: 'Search for agents by capabilities on the ZyndAI network',
