@@ -5,12 +5,13 @@ import type {
     INodeTypeDescription,
 } from 'n8n-workflow';
 import { NodeConnectionTypes } from 'n8n-workflow';
+import { HDKey, hdKeyToAccount } from 'viem/accounts'
 
 export class AgentPublisher implements INodeType {
     description: INodeTypeDescription = {
         displayName: 'Zynd Agent Publisher',
         name: 'zyndAgentPublisher',
-		icon: { light: 'file:../../icons/zynd.svg', dark: 'file:../../icons/zynd.svg' },
+        icon: { light: 'file:../../icons/zynd.svg', dark: 'file:../../icons/zynd.svg' },
         group: ['transform'],
         version: 1,
         description: 'Create and publish your n8n to the ZyndAI network',
@@ -24,7 +25,7 @@ export class AgentPublisher implements INodeType {
             {
                 name: 'zyndAiApi',
                 required: true
-            },
+            }
         ],
         properties: [],
     };
@@ -33,13 +34,14 @@ export class AgentPublisher implements INodeType {
 
         const items = this.getInputData();
         const returnData: INodeExecutionData[] = [];
-        this.logger.debug(`Starting execution of Zynd Agent Publisher node with ${items.length} items.`);
 
         const credentials = await this.getCredentials('zyndAiApi');
         const apiUrl = credentials.apiUrl as string;
 
         const n8nApiUrl = this.getInstanceBaseUrl();
         const workflowId = this.getWorkflow();
+        let webHookId: string;
+
 
         // Process each input item
         for (let i = 0; i < items.length; i++) {
@@ -59,6 +61,14 @@ export class AgentPublisher implements INodeType {
                     returnFullResponse: false,
                 });
 
+
+                try {
+                    webHookId = workflowResponse.nodes.filter((node: any) => node.type === 'n8n-nodes-base.webhook')[0].webhookId;
+                } catch {
+                    throw new Error('Add webhook node to your workflow before publishing the agent.');
+                }
+
+                // POST request to register agent -> uses workflow json to create new agent on zynd
                 const registerAgentResponse = await this.helpers.httpRequest({
                     method: 'POST',
                     url: `${apiUrl}/agents/n8n`,
@@ -73,7 +83,44 @@ export class AgentPublisher implements INodeType {
                     returnFullResponse: false,
                 });
 
-                const webHookId = workflowResponse.nodes.filter((node: any) => node.type === 'n8n-nodes-base.webhook')[0].webhookId;
+                try {
+                    const web3creds = await this.getCredentials('web3wallet');
+                    const walletSeed = web3creds?.wallet_seed as string;
+                    this.logger.error(`Wallet crds: ${JSON.stringify(web3creds)}`);
+
+                    if (registerAgentResponse.seed !== walletSeed) throw new Error('Wallet seed does not match the registered agent seed.');
+                } catch {
+                    const seed = Buffer.from(registerAgentResponse.seed, 'base64');
+                    const hdKey = HDKey.fromMasterSeed(seed);
+                    const account = hdKeyToAccount(hdKey);
+
+                    this.logger.error(`Derived Wallet Address: ${n8nApiUrl}api/v1/credentials ${credentials.n8nApiKey}`);
+
+                    await this.helpers.httpRequest({
+                        method: 'POST',
+                        url: `${n8nApiUrl}api/v1/credentials`,
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-N8N-API-KEY': credentials.n8nApiKey as string
+                        },
+                        body: JSON.stringify({
+                            "name": "Wallet Credential",
+                            "type": "web3wallet",
+                            "data": {
+                                "wallet_seed": registerAgentResponse.seed,
+                                "wallet_address": account.address
+                            }
+                        }),
+                        json: true,
+                        timeout: 10000,
+                        returnFullResponse: false,
+                    });
+
+                }
+
+                // Extract webhook ID from workflow response and update agent with webhook URL on zynd
+
                 if (webHookId) {
                     const webhookUrl = `${n8nApiUrl}webhook/${webHookId}`;
 

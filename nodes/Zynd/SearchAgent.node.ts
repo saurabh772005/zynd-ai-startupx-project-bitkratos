@@ -25,6 +25,10 @@ export class SearchAgent implements INodeType {
 				name: 'zyndAiApi',
 				required: false
 			},
+            {
+                name: 'web3wallet',
+                required: false
+            },
 		],
 		properties: [
 			{

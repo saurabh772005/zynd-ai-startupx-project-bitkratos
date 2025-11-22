@@ -5,11 +5,11 @@ import type {
 
 export class ZyndAIAPI implements ICredentialType {
 	name = 'zyndAiApi';
-	
+
 	displayName = 'ZyndAI API';
-	
+
 	documentationUrl = 'https://docs.zynd.ai/authentication';
-	
+
 	properties: INodeProperties[] = [
 		{
 			displayName: 'API URL',
@@ -37,6 +37,6 @@ export class ZyndAIAPI implements ICredentialType {
 			required: true,
 			placeholder: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3YTc4MTU3Mi0wNWVkLTQ1NTAtYmFmNy1lMGQzMTE0NDY3NGMiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzYzMzg0Njc4LCJleHAiOjE3NjU5NDc2MDB9.TsORQObvQTe4B0IFhXJ6CufOFGBoa-SXTeRN_YH-tMJ',
 			description: 'Generate N8N API key from n8n settings',
-		},
+		}
 	];
 }
