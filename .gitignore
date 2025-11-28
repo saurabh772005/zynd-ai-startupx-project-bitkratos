@@ -1,3 +1,5 @@
 dist
 node_modules
 data_n8n
+
+.env
