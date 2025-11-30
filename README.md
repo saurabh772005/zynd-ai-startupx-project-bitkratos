@@ -9,29 +9,60 @@ This package provides custom n8n nodes that enable:
 - **Zynd Agent Publisher**: Publish your n8n workflows as agents to the ZyndAI registry
 - **X402 Webhook**: Webhook node with built-in Web3 payment verification using the x402 protocol
 - **X402 Respond to Webhook**: Custom response node for X402 webhooks with payment settlement
+- **X402 HTTP Request**: Make HTTP requests with automatic Web3 payment using the x402-fetch protocol
+
+## Quick Start
+
+Get started in 2 minutes with the automated development setup:
+
+```bash
+# 1. Install prerequisites
+npm install -g pnpm
+# Make sure ngrok is installed and authenticated (see Prerequisites)
+
+# 2. Clone and setup
+git clone <repository-url>
+cd n8n-nodes-zyndai
+chmod +x run-manual.sh
+
+# 3. Run!
+./run-manual.sh
+```
+
+Your n8n instance with custom nodes will be running with auto-reload enabled. The ngrok public URL will be displayed in the terminal.
+
+For production deployment, use the [Docker method](#method-1-docker-recommended-for-production).
 
 ## Features
 
 - Web3 wallet integration using Viem
-- X402 payment protocol support for monetizing webhooks
-- Multi-network support (Ethereum, Base, Polygon, Arbitrum, Optimism, and testnets)
+- X402 payment protocol support for monetizing webhooks and APIs
+- X402 HTTP client for accessing paid endpoints
+- Multi-network support (Ethereum, Base, Polygon, Arbitrum, Optimism, BSC, Avalanche, and testnets)
 - Synchronous and asynchronous payment settlement modes
 - ZyndAI agent registry integration
-- DID-based wallet generation from seed phrases
+- DID-based wallet generation from seed phrases (BIP-39/BIP-44)
 
 ## Prerequisites
 
-- **Node.js** (v18 or higher recommended) and npm
+- **Node.js** (v18 or higher recommended) and npm/pnpm
 - **Docker** and **Docker Compose** (for Docker installation method)
 - **ngrok** (Must be installed on host and authenticated with authtoken)
 - **n8n** (for manual installation)
-- **jq** (for run script - to parse ngrok JSON output)
+- **jq** (for run.sh Docker script - to parse ngrok JSON output)
+- **nodemon** (optional, for run-manual.sh script - auto-reload on changes)
 
 ## Installation
 
-There are two methods to run this project:
+There are three methods to run this project. Choose based on your needs:
 
-### Method 1: Docker (Recommended)
+| Method | Best For | Auto-reload | Setup Time | Complexity |
+|--------|----------|-------------|------------|------------|
+| [run-manual.sh](#method-2-automated-manual-installation-recommended-for-development) | Development | ✅ Yes | ~2 min | Low |
+| [Docker](#method-1-docker-recommended-for-production) | Production | ❌ No | ~3 min | Medium |
+| [Manual](#method-3-manual-installation) | Full Control | ⚙️ Optional | ~5 min | High |
+
+### Method 1: Docker (Recommended for Production)
 
 This method uses Docker Compose with ngrok for automatic public URL setup.
 
@@ -67,9 +98,61 @@ This script will:
 
 This will stop and clean up the ngrok process.
 
-### Method 2: Manual Installation
+### Method 2: Automated Manual Installation (Recommended for Development)
 
-For local development without Docker.
+This method uses the `run-manual.sh` script to automatically set up everything for local development with hot-reload support.
+
+#### Features:
+- Automatic ngrok tunnel setup
+- Environment variable configuration
+- Global n8n installation
+- Package build and linking
+- Auto-reload on file changes using nodemon
+
+#### Prerequisites:
+- ngrok installed and authenticated
+- pnpm installed (`npm install -g pnpm`)
+
+#### Steps:
+
+**1. Make the script executable:**
+```bash
+chmod +x run-manual.sh
+```
+
+**2. Run the script:**
+```bash
+./run-manual.sh
+```
+
+The script will automatically:
+1. Start ngrok tunnel on port 5678
+2. Extract and export the public ngrok URL
+3. Install n8n and nodemon globally
+4. Install project dependencies using pnpm
+5. Build the custom nodes
+6. Link the package globally
+7. Set up the `~/.n8n/custom` directory
+8. Launch n8n with auto-reload on changes
+
+**3. Access n8n:**
+- Your n8n instance will be available at the ngrok URL displayed in the terminal
+- Local access: `http://localhost:5678`
+
+**4. Development workflow:**
+- The script uses nodemon to watch the `dist/` folder
+- Any changes you make will trigger an automatic rebuild and n8n restart
+- For active development, run `npm run build:watch` in a separate terminal to auto-rebuild on TypeScript changes
+
+**5. Stop the services:**
+Press `Ctrl+C` to stop n8n and manually stop ngrok:
+```bash
+pkill ngrok
+```
+
+### Method 3: Manual Installation
+
+For complete manual control without automation scripts.
 
 #### Step 1: Install n8n globally
 
@@ -251,16 +334,105 @@ Custom response node for X402 webhooks with payment header support.
 
 **Use Case**: Control response behavior for X402 webhooks, especially when using "Response Node" mode.
 
+### 5. X402 HTTP Request
+
+Make HTTP requests with automatic Web3 payment using the x402-fetch protocol. This node acts as a buyer/client that pays to access X402-protected endpoints.
+
+**Parameters:**
+- **Method**: HTTP method (GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS)
+- **URL**: The endpoint URL to call (must support X402 protocol)
+- **Authentication**: Optional authentication (None, Basic Auth, Header Auth, OAuth2, etc.)
+- **Send Query Parameters**: Add URL query parameters
+- **Send Headers**: Add custom HTTP headers
+- **Send Body**: Request body (JSON, Form Data, etc.)
+
+**Web3 Payment Configuration:**
+- **Agent Seed Phrase**: BIP-39 seed phrase for the wallet that will pay (12-24 words)
+- **Network**: Blockchain network to use for payment
+  - Base
+  - Base Sepolia (Testnet)
+  - Ethereum Mainnet
+  - Ethereum Sepolia (Testnet)
+  - Polygon
+  - Polygon Mumbai (Testnet)
+  - Optimism
+  - Optimism Sepolia (Testnet)
+  - Arbitrum
+  - Arbitrum Sepolia (Testnet)
+  - Avalanche
+  - Avalanche Fuji (Testnet)
+  - BSC (Binance Smart Chain)
+  - BSC Testnet
+
+**Features:**
+- Automatic wallet generation from seed phrase using BIP-39/BIP-44
+- Seamless payment handling through x402-fetch
+- Standard HTTP request capabilities with payment layer
+- Full network support for major EVM chains
+
+**Use Case**: Access monetized APIs and webhooks that require X402 payment. Perfect for integrating with X402 Webhook nodes or other x402-protected services.
+
+## X402 Payment Flow
+
+The package provides both seller and buyer nodes for the X402 payment protocol:
+
+**Seller Side (Receive Payments):**
+- Use **X402 Webhook** to create paid API endpoints
+- Clients must pay to access your webhook
+- Payments are verified and settled automatically
+- Use **X402 Respond to Webhook** for custom responses
+
+**Buyer Side (Make Payments):**
+- Use **X402 HTTP Request** to call paid endpoints
+- Automatically handles payment from your wallet
+- Supports all major EVM networks
+- Seamless integration with standard HTTP workflows
+
+**Example Use Case:**
+1. Service A publishes a paid AI model API using **X402 Webhook**
+2. Service B calls that API using **X402 HTTP Request**
+3. Payment flows automatically from Service B's wallet to Service A's wallet
+4. Both services continue their workflows seamlessly
+
 ## Development Scripts
 
 | Script                | Description                                                      |
 | --------------------- | ---------------------------------------------------------------- |
 | `npm run build`       | Compile TypeScript to JavaScript                                 |
 | `npm run build:watch` | Build in watch mode (auto-rebuild on changes)                    |
-| `npm run dev`         | Start n8n with nodes loaded and hot reload                       |
+| `npm run dev`         | TypeScript watch mode (use with nodemon for hot reload)          |
 | `npm run lint`        | Check code for errors and style issues                           |
 | `npm run lint:fix`    | Automatically fix linting issues                                 |
-| `npm run release`     | Create a new release                                             |
+| `./run.sh`            | Docker setup with ngrok (production-like environment)            |
+| `./run-manual.sh`     | Automated manual install with auto-reload (development)          |
+| `./stop.sh`           | Stop Docker services and ngrok                                   |
+
+### Development Workflow
+
+**For active development with hot-reload:**
+
+1. **Option A - Using run-manual.sh (Easiest):**
+   ```bash
+   ./run-manual.sh
+   ```
+   This handles everything automatically including auto-reload.
+
+2. **Option B - Manual setup with watch mode:**
+
+   Terminal 1 - Build watcher:
+   ```bash
+   npm run build:watch
+   ```
+
+   Terminal 2 - n8n with auto-reload:
+   ```bash
+   npx nodemon --watch ./dist --exec "n8n start"
+   ```
+
+**For production-like testing:**
+```bash
+./run.sh  # Docker with ngrok
+```
 
 ## Project Structure
 
@@ -270,8 +442,9 @@ n8n-nodes-zyndai/
 │   └── Zynd/
 │       ├── SearchAgent.node.ts          # Zynd agent search node
 │       ├── AgentPublisher.node.ts       # Zynd agent publisher node
-│       ├── X402Webhook.node.ts          # X402 webhook with payments
+│       ├── X402Webhook.node.ts          # X402 webhook with payments (seller)
 │       ├── X402RespondToWebhook.node.ts # X402 response node
+│       ├── X402HttpRequest.node.ts      # X402 HTTP request node (buyer)
 │       └── utils/                       # Utility functions
 │           ├── binary.ts                # Binary data handling
 │           ├── output.ts                # Output configuration
@@ -281,24 +454,27 @@ n8n-nodes-zyndai/
 │   └── Web3.credentials.ts              # Web3 wallet credentials
 ├── icons/                               # Node icons
 │   └── zynd.svg                        # ZyndAI logo
+├── build/                               # Build scripts
 ├── dist/                                # Compiled JavaScript (auto-generated)
+├── data_n8n/                            # n8n data directory (Docker volumes)
 ├── Dockerfile                           # Docker build configuration
 ├── docker-compose.yaml                  # Docker Compose setup
-├── run.sh                               # Docker start script
+├── run.sh                               # Docker start script with ngrok
+├── run-manual.sh                        # Manual install script with auto-reload
 ├── stop.sh                              # Docker stop script
 ├── .env.example                         # Environment template
 ├── package.json                         # Package configuration
+├── gulpfile.js                          # Gulp build tasks
+├── tsconfig.json                        # TypeScript configuration
 └── README.md                            # This file
 ```
 
 ## Key Dependencies
 
 - **viem** (^2.39.3): Ethereum library for Web3 functionality
-- **x402** (^0.7.3): Payment protocol implementation
-- **thirdweb** (^5.112.4): Web3 development framework
-- **jsonwebtoken** (^9.0.2): JWT token handling
-- **basic-auth** (^2.0.1): HTTP basic authentication
-- **isbot** (^5.1.32): Bot detection
+- **x402** (^0.7.3): Payment protocol implementation (webhook seller side)
+- **x402-fetch** (^0.7.3): Payment-enabled fetch wrapper (HTTP client buyer side)
+- **lodash** (^4.17.21): Utility functions
 
 ## Troubleshooting
 
@@ -318,6 +494,32 @@ n8n-nodes-zyndai/
 - Verify `.env` file exists and is properly configured
 - Check port 5678 is not already in use
 - Ensure sufficient disk space for Docker volumes
+
+### run-manual.sh Script Issues
+
+**Script fails to start ngrok:**
+- Verify ngrok is installed: `ngrok version`
+- Check ngrok authentication: `ngrok config check`
+- Ensure port 5678 is not already in use
+- Stop existing ngrok processes: `pkill ngrok`
+
+**"Could not fetch ngrok public URL" error:**
+- Wait a few more seconds and check `http://127.0.0.1:4040/status`
+- Ensure no firewall is blocking ngrok
+- Check ngrok.log for errors: `cat ngrok.log`
+
+**pnpm not found:**
+- Install pnpm globally: `npm install -g pnpm`
+- Or modify the script to use `npm` instead of `pnpm`
+
+**n8n won't auto-reload:**
+- Ensure nodemon is installed: `npm list -g nodemon`
+- Check that `dist/` folder exists
+- Verify build is creating files in `dist/`
+- Try manual restart: Kill n8n (Ctrl+C) and run `npx n8n start`
+
+**Permission denied on run-manual.sh:**
+- Make script executable: `chmod +x run-manual.sh`
 
 ### Manual Installation Issues
 
