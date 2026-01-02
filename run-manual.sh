@@ -45,8 +45,8 @@ echo "  N8N_PUBLIC_API_BASE_URL=$N8N_PUBLIC_API_BASE_URL"
 echo "  WEBHOOK_URL=$WEBHOOK_URL"
 
 echo "[1/6] Installing n8n globally..."
-npm install -g n8n
-npm install -g nodemon
+pnpm install -g n8n
+pnpm install -g nodemon
 
 echo "[2/6] Installing dependencies..."
 pnpm install

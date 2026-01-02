@@ -22,13 +22,13 @@ export class SearchAgent implements INodeType {
 		usableAsTool: true,
 		credentials: [
 			{
+				name: 'web3wallet',
+				required: false
+			},
+			{
 				name: 'zyndAiApi',
 				required: false
 			},
-            {
-                name: 'web3wallet',
-                required: false
-            },
 		],
 		properties: [
 			{

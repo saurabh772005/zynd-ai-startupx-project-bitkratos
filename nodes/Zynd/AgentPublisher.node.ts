@@ -34,7 +34,6 @@ export class AgentPublisher implements INodeType {
 
         const items = this.getInputData();
         const returnData: INodeExecutionData[] = [];
-
         const credentials = await this.getCredentials('zyndAiApi');
         const apiUrl = credentials.apiUrl as string;
 
@@ -90,38 +89,9 @@ export class AgentPublisher implements INodeType {
                     returnFullResponse: false,
                 });
 
-                try {
-                    const web3creds = await this.getCredentials('web3wallet');
-                    const walletSeed = web3creds?.wallet_seed as string;
-
-                    if (registerAgentResponse.seed !== walletSeed) throw new Error('Wallet seed does not match the registered agent seed.');
-                } catch {
-                    const seed = Buffer.from(registerAgentResponse.seed, 'base64');
-                    const hdKey = HDKey.fromMasterSeed(seed);
-                    const account = hdKeyToAccount(hdKey);
-
-                    await this.helpers.httpRequest({
-                        method: 'POST',
-                        url: `${n8nApiUrl}api/v1/credentials`,
-                        headers: {
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json',
-                            'X-N8N-API-KEY': credentials.n8nApiKey as string
-                        },
-                        body: JSON.stringify({
-                            "name": `Wallet Credential ${workflowId.name}`,
-                            "type": "web3wallet",
-                            "data": {
-                                "wallet_seed": registerAgentResponse.seed,
-                                "wallet_address": account.address
-                            }
-                        }),
-                        json: true,
-                        timeout: 10000,
-                        returnFullResponse: false,
-                    });
-
-                }
+                const seed = Buffer.from(registerAgentResponse.seed, 'base64');
+                const hdKey = HDKey.fromMasterSeed(seed);
+                const account = hdKeyToAccount(hdKey);
 
                 // Extract webhook ID from workflow response and update agent with webhook URL on zynd
 
@@ -159,6 +129,8 @@ export class AgentPublisher implements INodeType {
                         agentId: registerAgentResponse.id,
                         agentDID: registerAgentResponse.didIdentifier,
                         message: 'Agent published successfully',
+                        seed: registerAgentResponse.seed,
+                        address: account.address
                     },
                     pairedItem: { item: i },
                 });
