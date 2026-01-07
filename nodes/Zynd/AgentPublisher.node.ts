@@ -106,7 +106,7 @@ export class AgentPublisher implements INodeType {
                     
                     await this.helpers.httpRequest({
                         method: 'POST',
-                        url: `${apiUrl}/agents/update-n8n-webhook`,
+                        url: `${apiUrl}/agents/update-webhook`,
                         headers: {
                             'Accept': 'application/json',
                             'Content-Type': 'application/json',
@@ -114,7 +114,7 @@ export class AgentPublisher implements INodeType {
                         },
                         body: JSON.stringify({
                             "agentId": registerAgentResponse.id,
-                            "n8nHttpWebhookUrl": webhookUrl,
+                            "httpWebhookUrl": webhookUrl,
                         }),
                         json: true,
                         timeout: 10000,
