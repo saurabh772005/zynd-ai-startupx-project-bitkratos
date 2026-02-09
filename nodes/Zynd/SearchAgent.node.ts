@@ -172,8 +172,8 @@ export class SearchAgent implements INodeType {
 							name: agent.name || 'Unknown',
 							didIdentifier: agent.didIdentifier,
 							description: agent.description || '',
-							capabilities: agent.capabilities || [],
-							n8nHttpWebhookUrl: agent.n8nHttpWebhookUrl || ''
+							capabilities: agent.capabilities || {},
+							httpWebhookUrl: agent.httpWebhookUrl || ''
 						})),
 						count: agentsList.length,
 						timestamp: new Date().toISOString(),
