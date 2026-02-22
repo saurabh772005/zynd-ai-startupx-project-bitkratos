@@ -92,6 +92,7 @@ def get_user_profile():
     return jsonify(profile)
 
 if __name__ == '__main__':
-    print("🚀 StartupX Dashboard starting on http://localhost:8081")
+    port = int(os.environ.get('PORT', 8081))
+    print(f"🚀 StartupX Dashboard starting on port {port}")
     # Using threaded=True to handle multiple parallel requests (UI + status checks)
-    app.run(host='0.0.0.0', port=8081, debug=False, threaded=True)
+    app.run(host='0.0.0.0', port=port, debug=False, threaded=True)
