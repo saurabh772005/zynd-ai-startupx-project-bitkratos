@@ -1,6 +1,7 @@
 services:
   - type: web
     name: startupx-system
+    plan: free
     env: python
     buildCommand: pip install -r requirements_final.txt
     startCommand: python launch_zyndai.py
