@@ -76,10 +76,18 @@ rm ngrok.log
 # ---- Docker cross-platform run ----
 echo "Starting Docker Compose..."
 
-if command -v docker compose &>/dev/null; then
+# Add Docker Desktop path for macOS if not in PATH
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    export PATH="/Applications/Docker.app/Contents/Resources/bin:$PATH"
+fi
+
+if docker compose version &>/dev/null; then
     docker compose build --no-cache
     docker compose up
-else
+elif command -v docker-compose &>/dev/null; then
     docker-compose build --no-cache
     docker-compose up
+else
+    echo "❌ docker compose could not be found. Please ensure Docker is installed and in your PATH."
+    exit 1
 fi

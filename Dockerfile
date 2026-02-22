@@ -1,10 +1,10 @@
 # --- Stage 1: Builder ---
-FROM n8nio/n8n:latest AS builder
+FROM node:20-alpine AS builder
 
 USER root
 
 # Install build tools
-RUN apk add --update --no-cache python3 make g++ jq
+RUN apk add --update --no-cache python3 make g++ jq py3-setuptools
 RUN npm install -g typescript gulp
 
 WORKDIR /build
