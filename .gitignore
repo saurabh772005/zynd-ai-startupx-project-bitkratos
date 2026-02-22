@@ -1,5 +1,60 @@
-dist
-node_modules
-data_n8n
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
+# Virtual Environment
+venv/
+venv13/
+.venv/
+ENV/
+
+# Database and Storage
+*.db
+startupx_memory.db
+zyndai_memory.db
+uploads/
+
+# Logs
+*.log
+*.log.*
+
+# Environment Variables
 .env
+
+# OS
+.DS_Store
+
+# Node
+node_modules/
+pnpm-debug.log*
+
+# Project Specific
+.agent-*/
+.agent-compliance/
+.agent-core/
+.agent-ip-shield/
+.agent-procurement/
+.agent-risk/
+final_verification_logs.txt
+system_info.txt
+requirements_final.txt
+available_models.txt
